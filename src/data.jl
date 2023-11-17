@@ -23,3 +23,38 @@ function get_laus_data()
     df.period = lastdayofmonth.(Date.(strip.(replace.(df.period, "(p)" => "")), dateformat"u-yy") .+ Year(2000))
     return df
 end
+
+function get_qcew_data()
+    println("Fetching QCEW data...")
+    year = Dates.year(now())
+    url = "https://data.bls.gov/cew/data/files/$year/xls/$(year)_all_county_high_level.zip"
+    res = HTTP.request("HEAD", url)
+    if res.status !== 200
+        year = year - 1
+    end
+    tempdir = tempname(; cleanup=true)
+    filepath = joinpath(tempdir, basename(url))
+    mkdir(tempdir)
+    try
+        filepath = Downloads.download(url, filepath)
+        println("Extracting QCEW data...")
+        zarchive = ZipFile.Reader(filepath)
+
+        for f in zarchive.files
+            write(joinpath(tempdir, f.name), read(f))
+        end
+
+        extracted_files = filter(file -> endswith(file, ".xlsx"), readdir(tempdir; join=true))
+        xf = XLSX.readxlsx(extracted_files[1])
+        us = DataFrame(XLSX.readtable(extracted_files[1], XLSX.sheetnames(xf)[1]; infer_eltypes=true))
+        pr = DataFrame(XLSX.readtable(extracted_files[1], XLSX.sheetnames(xf)[2]; infer_eltypes=true))
+        df = vcat(us, pr)
+        normalize_names!(df)
+        return @chain df begin
+            @rsubset(:area_type == "County")
+            @transform(:areacode = parse.(Int, :areacode))
+        end
+    catch err
+        throw(err)
+    end
+end
