@@ -118,3 +118,40 @@ function get_office_names()
     district = sort(collect(filter(ofc -> occursin("District", ofc), office_names)))
     return (regional_offices=regional, district_offices=district)
 end
+
+function do_heatmap(df; office_col, data_col, color_scheme)
+    @vlplot(
+        width=680,
+        height=400,
+        mark={ 
+            :geoshape,
+            stroke=:black
+        },
+        data={
+            url="https://gist.githubusercontent.com/mthelm85/f8dbc6b7683f88166725ba7bef4ee2d7/raw/31b76583cf93b20ae17784ce82be19d34dd4be62/offices_topo.json",
+            format={
+                type=:topojson,
+                feature=:offices
+            }
+        },
+        transform=[{
+            lookup="properties.WH_OFFICE",
+            from={
+                data=df,
+                key=office_col,
+                fields=[string(data_col)]
+            }
+        }],
+        projection={
+            type=:albersUsa
+        },
+        color={
+            "$data_col:q",
+            scale={domain=[minimum(df[!, data_col]), maximum(df[!, data_col])], scheme=color_scheme},
+            legend=false
+        },
+        encoding={
+            tooltip=[{ field=data_col }, { field="properties.WH_OFFICE", title="WHD Office" }]
+        }
+    )
+end

@@ -6,6 +6,7 @@ using Dates
 using Downloads
 using HTTP
 using StringDistances
+using VegaLite
 using XLSX
 using ZipFile
 
@@ -23,5 +24,6 @@ const qcew = Ref{Union{Nothing,DataFrame}}(nothing)
 export LAUS
 export get_office_names
 export QCEW
+export do_heatmap
 
 end
