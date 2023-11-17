@@ -119,7 +119,27 @@ function get_office_names()
     return (regional_offices=regional, district_offices=district)
 end
 
-function do_heatmap(df; office_col, data_col, color_scheme)
+"""
+    do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
+
+Create a heatmap visualization using Vega-Lite.
+
+# Arguments
+- `df`: DataFrame: The DataFrame containing the data for the heatmap.
+- `office_col`: Symbol: The name of the column in `df` that contains the office names.
+- `data_col`: Symbol: The name of the column in `df` that contains the data values.
+- `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`.
+
+# Returns
+- A Vega-Lite specification for the heatmap visualization.
+
+# Example
+```julia
+heatmap = do_heatmap(df; office_col=:office_name, data_col=:value, color_scheme=:greys)
+```
+This code creates a heatmap visualization using the `df` DataFrame. The `office_col` argument specifies the column in `df` that contains the office names, and the `data_col` argument specifies the column that contains the data values.
+"""
+function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
     @vlplot(
         width=680,
         height=400,
