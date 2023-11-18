@@ -71,7 +71,7 @@ end
 The `QCEW` function retrieves the most recent QCEW data based on the provided office name and returns the result as a `DataFrame`.
 
 # Arguments
-- `office::String`: The name of the office for which QCEW data is requested.
+- `office::String`: The name of the office for which QCEW data is requested. Can be a regional or district office.
 
 # Returns
 A `DataFrame` containing the requested data.
@@ -122,11 +122,11 @@ end
 """
     do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
 
-Create a heatmap visualization using Vega-Lite.
+Create a district office heatmap visualization using Vega-Lite.
 
 # Arguments
 - `df`: DataFrame: The DataFrame containing the data for the heatmap.
-- `office_col`: Symbol: The name of the column in `df` that contains the office names.
+- `office_col`: Symbol: The name of the column in `df` that contains the district office names.
 - `data_col`: Symbol: The name of the column in `df` that contains the data values.
 - `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`.
 
@@ -168,10 +168,67 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
         color={
             "$data_col:q",
             scale={domain=[minimum(df[!, data_col]), maximum(df[!, data_col])], scheme=color_scheme},
-            legend=false
+            legend=true
         },
         encoding={
             tooltip=[{ field=data_col }, { field="properties.WH_OFFICE", title="WHD Office" }]
+        }
+    )
+end
+
+"""
+    ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
+
+Create a regional office heatmap visualization using Vega-Lite.
+
+# Arguments
+- `df`: DataFrame: The DataFrame containing the data for the heatmap.
+- `office_col`: Symbol: The name of the column in `df` that contains the regional office names.
+- `data_col`: Symbol: The name of the column in `df` that contains the data values.
+- `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`.
+
+# Returns
+- A Vega-Lite specification for the heatmap visualization.
+
+# Example
+```julia
+heatmap = ro_heatmap(df; office_col=:office_name, data_col=:value, color_scheme=:greys)
+```
+This code creates a heatmap visualization using the `df` DataFrame. The `office_col` argument specifies the column in `df` that contains the office names, and the `data_col` argument specifies the column that contains the data values.
+"""
+function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
+    @vlplot(
+        width=680,
+        height=400,
+        mark={ 
+            :geoshape,
+            stroke=:black
+        },
+        data={
+            url="https://gist.githubusercontent.com/mthelm85/dfbacf9ea251965cfbf88b33e2f58222/raw/57a469e6e2ad12e4574239354315ebc5a79313e1/regions_topo.json",
+            format={
+                type=:topojson,
+                feature=:regions
+            }
+        },
+        transform=[{
+            lookup="properties.WH_REGION",
+            from={
+                data=df,
+                key=office_col,
+                fields=[string(data_col)]
+            }
+        }],
+        projection={
+            type=:albersUsa
+        },
+        color={
+            "$data_col:q",
+            scale={domain=[minimum(df[!, data_col]), maximum(df[!, data_col])], scheme=color_scheme},
+            legend=true
+        },
+        encoding={
+            tooltip=[{ field=data_col }, { field="properties.WH_REGION", title="WHD Region" }]
         }
     )
 end

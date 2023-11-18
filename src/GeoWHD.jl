@@ -25,5 +25,6 @@ export LAUS
 export get_office_names
 export QCEW
 export do_heatmap
+export ro_heatmap
 
 end

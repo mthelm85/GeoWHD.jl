@@ -3,26 +3,19 @@ struct County
     county_fips::Int
     state::String
     state_fips::Int
-    # geo::Dict
     id::Int
     district_office_name::String
-    # district_office_id::Int
 end
 
 struct DistrictOffice
     name::String
-    # id::Int
     counties::Vector{County}
     region_name::String
-    # region_id::Int
-    # geo::Dict
 end
 
 struct RegionalOffice
     name::String
-    # id::Int
     district_offices::Vector{DistrictOffice}
-    # geo::Dict
 end
 
 do_counties_fips(office::DistrictOffice) = [county.id for county in office.counties]
