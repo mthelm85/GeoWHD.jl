@@ -12,6 +12,22 @@ function OEWS(office::RegionalOffice)
     return leftjoin(series, oews_data[]; on=:series_id, makeunique=true)
 end
 
+"""
+    OEWS(occupation_code::Int)
+
+Retrieve the most recent OEWS (Occupational Employment and Wage Statistics) data for a specific occupation.
+
+## Arguments
+- `occupation_code::Int`: The occupation code for which OEWS data is requested. Options available here: https://download.bls.gov/pub/time.series/oe/oe.occupation
+
+## Returns
+A `DataFrame` containing the requested data.
+
+## Example
+```julia
+OEWS(352011)
+```
+"""
 function OEWS(occupation_code::Int)
     if isnothing(oews_series[])
         oews_series[] = get_oews_series()
@@ -192,7 +208,7 @@ Create a district office heatmap visualization using Vega-Lite.
 - `df`: DataFrame: The DataFrame containing the data for the heatmap.
 - `office_col`: Symbol: The name of the column in `df` that contains the district office names.
 - `data_col`: Symbol: The name of the column in `df` that contains the data values.
-- `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: `https://vega.github.io/vega/docs/schemes/`
+- `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
 
 # Returns
 - A Vega-Lite specification for the heatmap visualization.
@@ -266,7 +282,7 @@ Create a regional office heatmap visualization using Vega-Lite.
 - `df`: DataFrame: The DataFrame containing the data for the heatmap.
 - `office_col`: Symbol: The name of the column in `df` that contains the regional office names.
 - `data_col`: Symbol: The name of the column in `df` that contains the data values.
-- `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: `https://vega.github.io/vega/docs/schemes/`
+- `color_scheme` (optional): Symbol: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
 
 # Returns
 - A Vega-Lite specification for the heatmap visualization.
@@ -357,7 +373,7 @@ Generates a heatmap plot of MSAs using Vega-Lite, including WHD District Offices
 - `df::DataFrame`: The input DataFrame containing the data to be visualized.
 - `area_col::Symbol=:area_code`: The column in the DataFrame that represents the MSAs to be plotted.
 - `data_col::Symbol=:value`: The column in the DataFrame that represents the data to be used for coloring the areas.
-- `color_scheme::Symbol=:greys`: The color scheme to be used for the heatmap plot.
+- `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
 
 # Example
 ```julia

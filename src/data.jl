@@ -58,6 +58,7 @@ function get_oews_series()
     df = @chain CSV.read(IOBuffer(content), DataFrame; normalizenames=true) begin
         @rsubset(:areatype_code == "M")
         @rtransform(:area_code = string(:area_code))
+        @rtransform(:district_office = msas[:area_code])
     end
     return df
 end
