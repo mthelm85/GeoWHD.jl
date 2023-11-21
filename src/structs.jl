@@ -7,9 +7,15 @@ struct County
     district_office_name::String
 end
 
+struct MSA
+    id::String
+    district_offices::Vector{String}
+end
+
 struct DistrictOffice
     name::String
     counties::Vector{County}
+    msas::Vector{MSA}
     region_name::String
 end
 
@@ -18,11 +24,8 @@ struct RegionalOffice
     district_offices::Vector{DistrictOffice}
 end
 
-do_counties_fips(office::DistrictOffice) = [county.id for county in office.counties]
-region_dos_names(region::RegionalOffice) = [office.name for office in region.district_offices]
-region_counties_fips(region::RegionalOffice) = reduce(vcat, [do_counties_fips(office) for office in region.district_offices])
-
 counties = CSV.read(project_path("data/do-counties.csv"), DataFrame)
+msas = JSON.parsefile(project_path("data/do-msa.json"); dicttype=Dict{String, Vector{String}})
 
 whd_counties = [County(
     row.county_name,
@@ -33,9 +36,12 @@ whd_counties = [County(
     row.wh_office_name
 ) for row in eachrow(counties)]
 
+whd_msas = [MSA(k,v) for (k,v) in msas]
+
 district_offices = Dict(office => DistrictOffice(
     office,
     filter(county -> county.district_office_name == office, whd_counties),
+    filter(msa -> office in msa.district_offices, whd_msas),
     filter(row -> row.wh_office_name == office, counties)[1, :region_name]
 ) for office in unique(counties.wh_office_name))
 

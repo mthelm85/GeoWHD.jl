@@ -1,22 +1,13 @@
 function get_laus_data()
     println("Fetching LAUS data...")
-
-    # Last 14 months of LAUS data for all counties
     url = "https://www.bls.gov/web/metro/laucntycur14.txt"
-
-    # Download the content from the URL
     response = HTTP.get(url)
     content = String(response.body)
-
     # Skip to the 7th line
     lines = split(content, '\n')[7:end-6]
-
     # Join the lines back into a single string
     data_section = join(lines, '\n')
-
-    # Create a CSV.Reader from the data section with pipe delimiter
     reader = CSV.File(IOBuffer(data_section), delim='|', header=false, groupmark=',')
-
     df = DataFrame(reader)
     rename!(df, [:area_code, :state_fips, :county_fips, :area_title, :period, :civilian_labor_force, :employed, :unemployed, :unemployment_rate])
     df.fips = parse.(Int, lpad.(df.state_fips, 2, "0") .* lpad.(df.county_fips, 3, "0"))
@@ -57,4 +48,26 @@ function get_qcew_data()
     catch err
         throw(err)
     end
+end
+
+function get_oews_series()
+    println("Fetching OEWS series information...")
+    url = "https://download.bls.gov/pub/time.series/oe/oe.series"
+    response = HTTP.get(url)
+    content = String(response.body)
+    df = @chain CSV.read(IOBuffer(content), DataFrame; normalizenames=true) begin
+        @rsubset(:areatype_code == "M")
+        @rtransform(:area_code = string(:area_code))
+    end
+    return df
+end
+
+function get_oews_data()
+    println("Fetching OEWS data...")
+    url = "https://download.bls.gov/pub/time.series/oe/oe.data.0.Current"
+    response = HTTP.get(url)
+    content = String(response.body)
+    df = CSV.read(IOBuffer(content), DataFrame; normalizenames=true)
+    df.value = strip.(df.value)
+    return df
 end
