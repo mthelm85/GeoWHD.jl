@@ -43,13 +43,14 @@ OEWS("New York City District Office")
 """
 function OEWS(office::String)
     try
+        office_lookup = offices[office]
         if isnothing(oews_series[])
             oews_series[] = get_oews_series()
         end
         if isnothing(oews_data[])
             oews_data[] = get_oews_data()
         end
-        return OEWS(offices[office])
+        return OEWS(office_lookup)
     catch err
         if typeof(err) == KeyError
             nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
@@ -101,10 +102,11 @@ result = LAUS("New York City District Office")
 """
 function LAUS(office::String)
     try
+        office_lookup = offices[office]
         if isnothing(laus[])
             laus[] = get_laus_data()
         end
-        return LAUS(offices[office])
+        return LAUS(office_lookup)
     catch err
         if typeof(err) == KeyError
             nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
@@ -144,10 +146,11 @@ result = QCEW("New York City District Office")
 """
 function QCEW(office::String)
     try
+        office_lookup = offices[office]
         if isnothing(qcew[])
             qcew[] = get_qcew_data()
         end
-        return QCEW(offices[office])
+        return QCEW(office_lookup)
     catch err
         if typeof(err) == KeyError
             nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]

@@ -28,7 +28,7 @@ do_heatmap(unemployment; office_col=:office, data_col=:unemployment_rate, color_
 ```
 ## Functions
 - `LAUS`: Retrieves LAUS data for a given office.
-- `OEWS`: Exported symbol that represents the `oews_series` constant.
+- `OEWS`: Retrieves OEWS data for a given office.
 - `QCEW`: Retrieves QCEW data for a given office.
 - `do_heatmap`: Creates District Office heatmaps.
 - `ro_heatmap`: Creates Regional Office heatmaps.
