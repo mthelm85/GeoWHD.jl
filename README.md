@@ -12,7 +12,7 @@ using DataFrames
 
 # Get office names
 office_names = get_office_names()
-regional_offices = office_names.regional.offices
+regional_offices = office_names.regional_offices
 district_offices = office_names.district_offices
 
 # Get Local Area Unemployment Statistics (LAUS) data for the Seattle District Office
