@@ -69,5 +69,7 @@ export ro_heatmap
 export OEWS
 export get_msas
 export msa_heatmap
+export do_msa_heatmap
+export do_county_heatmap
 
 end

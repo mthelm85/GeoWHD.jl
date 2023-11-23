@@ -76,37 +76,52 @@ function OEWS(office::String)
     end
 end
 
-function LAUS(office::DistrictOffice)
-    @chain laus[] begin
-        @rsubset(:fips in do_counties_fips(office))
-        @by(:period,
-            :civilian_labor_force = sum(:civilian_labor_force),
-            :employed = sum(:employed),
-            :unemployed = sum(:unemployed)
-        )
-        @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+function LAUS(office::DistrictOffice; aggregate::Bool=true)
+    if aggregate
+        return @chain laus[] begin
+            @rsubset(:fips in do_counties_fips(office))
+            @by(:period,
+                :civilian_labor_force = sum(:civilian_labor_force),
+                :employed = sum(:employed),
+                :unemployed = sum(:unemployed)
+            )
+            @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+        end
+    else
+        return @chain laus[] begin
+            @rsubset(:fips in do_counties_fips(office))
+            @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+        end
     end
 end
 
-function LAUS(office::RegionalOffice)
-    @chain laus[] begin
-        @rsubset(:fips in region_counties_fips(office))
-        @by(:period,
-            :civilian_labor_force = sum(:civilian_labor_force),
-            :employed = sum(:employed),
-            :unemployed = sum(:unemployed)
-        )
-        @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+function LAUS(office::RegionalOffice; aggregate::Bool=true)
+    if aggregate
+        return @chain laus[] begin
+            @rsubset(:fips in region_counties_fips(office))
+            @by(:period,
+                :civilian_labor_force = sum(:civilian_labor_force),
+                :employed = sum(:employed),
+                :unemployed = sum(:unemployed)
+            )
+            @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+        end
+    else
+        return @chain laus[] begin
+            @rsubset(:fips in region_counties_fips(office))
+            @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+        end
     end
 end
 
 """
-    LAUS(office::String)
+    LAUS(office::String; aggregate::Bool=true)
 
 The `LAUS` function fetches the Local Area Unemployment Statistics (LAUS) data for the specified office, for the most recent 14-month period.
 
 ## Arguments
 - `office::String`: The name of the office for which the LAUS data is requested. Can be a regional or district office.
+- `aggregate::Bool`: A boolean that determines if you want the data aggregated, as opposed to receiving the county-level data.
 
 ## Returns
 A `DataFrame` containing the requested data.
@@ -116,13 +131,13 @@ A `DataFrame` containing the requested data.
 result = LAUS("New York City District Office")
 ```
 """
-function LAUS(office::String)
+function LAUS(office::String; aggregate::Bool=true)
     try
         office_lookup = offices[office]
         if isnothing(laus[])
             laus[] = get_laus_data()
         end
-        return LAUS(office_lookup)
+        return LAUS(office_lookup; aggregate)
     catch err
         if typeof(err) == KeyError
             nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
@@ -235,37 +250,37 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
     end
     try
         @vlplot(
-            width=680,
-            height=400,
-            mark={ 
+            width = 680,
+            height = 400,
+            mark = {
                 :geoshape,
-                stroke=:black
+                stroke = :black
             },
-            data={
-                url="https://gist.githubusercontent.com/mthelm85/f8dbc6b7683f88166725ba7bef4ee2d7/raw/31b76583cf93b20ae17784ce82be19d34dd4be62/offices_topo.json",
-                format={
-                    type=:topojson,
-                    feature=:offices
+            data = {
+                values = JSON.json(JSON.parsefile(project_path("data/offices_topo.json"))),
+                format = {
+                    type = :topojson,
+                    feature = :offices
                 }
             },
-            transform=[{
-                lookup="properties.WH_OFFICE",
-                from={
-                    data=df,
-                    key=office_col,
-                    fields=[string(data_col)]
+            transform = [{
+                lookup = "properties.WH_OFFICE",
+                from = {
+                    data = df,
+                    key = office_col,
+                    fields = [string(data_col)]
                 }
             }],
-            projection={
-                type=:albersUsa
+            projection = {
+                type = :albersUsa
             },
-            color={
+            color = {
                 "$data_col:q",
-                scale={domain=[minimum(df[!, data_col]), maximum(df[!, data_col])], scheme=color_scheme},
-                legend=true
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
             },
-            encoding={
-                tooltip=[{ field=data_col }, { field="properties.WH_OFFICE", title="WHD Office" }]
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office"}]
             }
         )
     catch err
@@ -309,37 +324,37 @@ function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
     end
     try
         @vlplot(
-            width=680,
-            height=400,
-            mark={ 
+            width = 680,
+            height = 400,
+            mark = {
                 :geoshape,
-                stroke=:black
+                stroke = :black
             },
-            data={
-                url="https://gist.githubusercontent.com/mthelm85/dfbacf9ea251965cfbf88b33e2f58222/raw/57a469e6e2ad12e4574239354315ebc5a79313e1/regions_topo.json",
-                format={
-                    type=:topojson,
-                    feature=:regions
+            data = {
+                values = JSON.json(JSON.parsefile(project_path("data/regions_topo.json"))),
+                format = {
+                    type = :topojson,
+                    feature = :regions
                 }
             },
-            transform=[{
-                lookup="properties.WH_REGION",
-                from={
-                    data=df,
-                    key=office_col,
-                    fields=[string(data_col)]
+            transform = [{
+                lookup = "properties.WH_REGION",
+                from = {
+                    data = df,
+                    key = office_col,
+                    fields = [string(data_col)]
                 }
             }],
-            projection={
-                type=:albersUsa
+            projection = {
+                type = :albersUsa
             },
-            color={
+            color = {
                 "$data_col:q",
-                scale={domain=[minimum(df[!, data_col]), maximum(df[!, data_col])], scheme=color_scheme},
-                legend=true
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
             },
-            encoding={
-                tooltip=[{ field=data_col }, { field="properties.WH_REGION", title="WHD Region" }]
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.WH_REGION", title = "WHD Region"}]
             }
         )
     catch err
@@ -396,37 +411,227 @@ function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbo
     end
     try
         @vlplot(
-            width=680,
-            height=400,
-            mark={ 
+            width = 680,
+            height = 400,
+            mark = {
                 :geoshape,
-                stroke=:black
+                stroke = :black
             },
-            data={
-                url="https://gist.githubusercontent.com/mthelm85/27733d4c382d5dab2406d7120c598863/raw/d490e8ad5b77a05a00c51a247dd4444a12374025/OES_WHD_topo.json",
-                format={
-                    type=:topojson,
-                    feature=:OES_WHD_geo2
+            data = {
+                values = JSON.json(JSON.parsefile(project_path("data/OES_WHD_topo.json"))),
+                format = {
+                    type = :topojson,
+                    feature = :OES_WHD_geo2
                 }
             },
-            transform=[{
-                lookup="properties.msa7",
-                from={
-                    data=df,
-                    key=area_col,
-                    fields=[string(data_col)]
+            transform = [{
+                lookup = "properties.msa7",
+                from = {
+                    data = df,
+                    key = area_col,
+                    fields = [string(data_col)]
                 }
             }],
-            projection={
-                type=:albersUsa
+            projection = {
+                type = :albersUsa
             },
-            color={
+            color = {
                 "$data_col:q",
-                scale={domain=[minimum(df[!, data_col]), maximum(df[!, data_col])], scheme=color_scheme},
-                legend=true
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
             },
-            encoding={
-                tooltip=[{ field=data_col }, { field="properties.WH_OFFICE", title="WHD Office(s)" }, { field="properties.MSA", title="MSA" }]
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office(s)"}, {field = "properties.MSA", title = "MSA"}]
+            }
+        )
+    catch err
+        throw(err)
+    end
+end
+
+"""
+    do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+
+Generates a heatmap plot of MSAs for a specific District Office using Vega-Lite.
+
+# Arguments
+- `df::DataFrame`: The input DataFrame containing the data to be visualized.
+- `office::String`: The District Office for which you would like to create the visual.
+- `area_col::Symbol=:area_code`: The column in the DataFrame that represents the MSAs to be plotted.
+- `data_col::Symbol=:value`: The column in the DataFrame that represents the data to be used for coloring the areas.
+- `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
+
+# Example
+```julia
+do_msa_heatmap(df; color_scheme=:blues)
+```
+
+# Output
+A heatmap plot where each area is colored based on the specified data column.
+"""
+function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+    if !in(color_scheme, (
+        :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
+        :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
+        :purpleblue, :purplered, :redpurple, :yellowgreenblue, :yellowgreen, :yelloworangebrown, :yelloworangered, :darkblue,
+        :darkgold, :darkgreen, :darkmulti, :darkred, :lightgreyred, :lightgreyteal, :lightmulti, :lightorange, :lighttealblue,
+        :blueorange, :brownbluegreen, :purplegreen, :pinkyellowgreen, :purpleorange, :redblue, :redgrey, :redyellowblue, :redyellowgreen,
+        :spectral, :rainbow, :sinebow
+    ))
+        throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
+    end
+    try
+        offices[office]
+    catch err
+        if typeof(err) == KeyError
+            nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
+            return throw(ErrorException(""""$office" is not a valid office name. Did you mean "$nearest"?"""))
+        end
+        throw(err)
+    end
+    if office_type(office) == RegionalOffice
+        throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_msa_heatmap?"))
+    end
+    try
+        oes = JSON.parsefile(project_path("data/OES_WHD_topo.json"))
+        filtered_dict = Dict(
+            "arcs" => oes["arcs"],
+            "objects" => Dict("OES_WHD_geo2" => Dict(
+                "type" => "GeometryCollection",
+                "geometries" => filter(dict -> office in dict["properties"]["WH_OFFICE"], oes["objects"]["OES_WHD_geo2"]["geometries"])
+            )),
+            "type" => oes["type"],
+            "transform" => oes["transform"]
+        )
+        @vlplot(
+            width = 680,
+            height = 400,
+            mark = {
+                :geoshape,
+                stroke = :black
+            },
+            data = {
+                values = JSON.json(filtered_dict),
+                format = {
+                    type = :topojson,
+                    feature = :OES_WHD_geo2
+                }
+            },
+            transform = [{
+                lookup = "properties.msa7",
+                from = {
+                    data = df,
+                    key = area_col,
+                    fields = [string(data_col)]
+                }
+            }],
+            projection = {
+                type = :mercator
+            },
+            color = {
+                "$data_col:q",
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
+            },
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.MSA", title = "MSA"}]
+            }
+        )
+    catch err
+        throw(err)
+    end
+end
+
+"""
+    do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+
+Generates a heatmap plot of counties for a specific District Office using Vega-Lite.
+
+# Arguments
+- `df::DataFrame`: The input DataFrame containing the data to be visualized.
+- `office::String`: The District Office for which you would like to create the visual.
+- `fips_col::Symbol=:fips`: The column in the DataFrame that represents the 5-digit county FIPS to be plotted.
+- `data_col::Symbol=:value`: The column in the DataFrame that represents the data to be used for coloring the areas.
+- `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
+
+# Example
+```julia
+do_county_heatmap(df; color_scheme=:blues)
+```
+
+# Output
+A heatmap plot where each area is colored based on the specified data column.
+"""
+function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+    if !in(color_scheme, (
+        :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
+        :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
+        :purpleblue, :purplered, :redpurple, :yellowgreenblue, :yellowgreen, :yelloworangebrown, :yelloworangered, :darkblue,
+        :darkgold, :darkgreen, :darkmulti, :darkred, :lightgreyred, :lightgreyteal, :lightmulti, :lightorange, :lighttealblue,
+        :blueorange, :brownbluegreen, :purplegreen, :pinkyellowgreen, :purpleorange, :redblue, :redgrey, :redyellowblue, :redyellowgreen,
+        :spectral, :rainbow, :sinebow
+    ))
+        throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
+    end
+    try
+        offices[office]
+    catch err
+        if typeof(err) == KeyError
+            nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
+            return throw(ErrorException(""""$office" is not a valid office name. Did you mean "$nearest"?"""))
+        end
+        throw(err)
+    end
+    if office_type(office) == RegionalOffice
+        throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_msa_heatmap?"))
+    end
+    try
+        laus = JSON.parsefile(project_path("data/whd_counties.json"))
+
+        filtered_dict = Dict(
+            "arcs" => laus["arcs"],
+            "objects" => Dict("counties" => Dict(
+                "type" => "GeometryCollection",
+                "geometries" => filter(dict -> office == dict["properties"]["WH_OFFICE"], laus["objects"]["counties"]["geometries"])
+            )),
+            "type" => laus["type"],
+            "transform" => laus["transform"]
+        )
+
+        df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
+
+        @vlplot(
+            width = 680,
+            height = 400,
+            mark = {
+                :geoshape,
+                stroke = :black
+            },
+            data = {
+                values = JSON.json(filtered_dict),
+                format = {
+                    type = :topojson,
+                    feature = :counties
+                }
+            },
+            transform = [{
+                lookup = "properties.FIPS",
+                from = {
+                    data = df,
+                    key = fips_col,
+                    fields = [string(data_col)]
+                }
+            }],
+            projection = {
+                type = office == "Seattle District Office" ? :albersUsa : :mercator
+            },
+            color = {
+                "$data_col:q",
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
+            },
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.COUNTYNAME", title = "County"}]
             }
         )
     catch err

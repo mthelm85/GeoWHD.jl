@@ -32,9 +32,11 @@ function get_qcew_data()
         zarchive = ZipFile.Reader(filepath)
 
         for f in zarchive.files
-            write(joinpath(tempdir, f.name), read(f))
+            content = read(f)
+            write(joinpath(tempdir, f.name), content)
         end
 
+        close(zarchive)
         extracted_files = filter(file -> endswith(file, ".xlsx"), readdir(tempdir; join=true))
         xf = XLSX.readxlsx(extracted_files[1])
         us = DataFrame(XLSX.readtable(extracted_files[1], XLSX.sheetnames(xf)[1]; infer_eltypes=true))
