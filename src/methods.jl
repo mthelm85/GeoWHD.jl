@@ -586,7 +586,7 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_msa_heatmap?"))
     end
     try
-        laus = JSON.parsefile(project_path("data/whd_counties.json"))
+        laus = JSON.parsefile(project_path("data/counties_topo.json"))
 
         filtered_dict = Dict(
             "arcs" => laus["arcs"],
