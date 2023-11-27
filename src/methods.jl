@@ -115,6 +115,39 @@ function LAUS(office::RegionalOffice; aggregate::Bool=true)
 end
 
 """
+    LAUS(; aggregate::Bool=false)
+
+The `LAUS` function fetches the Local Area Unemployment Statistics (LAUS) data for the most recent 14-month period.
+
+## Arguments
+- `aggregate::Bool`: A boolean that determines if you want the data aggregated, as opposed to receiving the county-level data.
+
+## Returns
+A `DataFrame` containing the requested data.
+
+## Example
+```julia
+result = LAUS()
+```
+"""
+function LAUS(; aggregate::Bool=false)
+    if aggregate
+        return @chain laus[] begin
+            @by(:period,
+                :civilian_labor_force = sum(:civilian_labor_force),
+                :employed = sum(:employed),
+                :unemployed = sum(:unemployed)
+            )
+            @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+        end
+    else
+        return @chain laus[] begin
+            @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
+        end
+    end
+end
+
+"""
     LAUS(office::String; aggregate::Bool=true)
 
 The `LAUS` function fetches the Local Area Unemployment Statistics (LAUS) data for the specified office, for the most recent 14-month period.
