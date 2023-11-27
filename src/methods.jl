@@ -583,7 +583,7 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         throw(err)
     end
     if office_type(office) == RegionalOffice
-        throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_msa_heatmap?"))
+        throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_county_heatmap?"))
     end
     try
         laus = JSON.parsefile(project_path("data/counties_topo.json"))
@@ -632,6 +632,76 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.COUNTYNAME", title = "County"}]
+            }
+        )
+    catch err
+        throw(err)
+    end
+end
+
+"""
+    county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
+
+Generates a heatmap plot of counties using Vega-Lite, including WHD District/Regional Offices that correspond to each county in the tooltip.
+
+# Arguments
+- `df::DataFrame`: The input DataFrame containing the data to be visualized.
+- `fips_col::Symbol=:fips`: The column in the DataFrame that represents the 5-digit FIPS for each county to be plotted.
+- `data_col::Symbol`: The column in the DataFrame that represents the data to be used for coloring the areas.
+- `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
+
+# Example
+```julia
+county_heatmap(df; color_scheme=:blues)
+```
+
+# Output
+A heatmap plot where each area is colored based on the specified data column.
+"""
+function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
+    if !in(color_scheme, (
+        :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
+        :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
+        :purpleblue, :purplered, :redpurple, :yellowgreenblue, :yellowgreen, :yelloworangebrown, :yelloworangered, :darkblue,
+        :darkgold, :darkgreen, :darkmulti, :darkred, :lightgreyred, :lightgreyteal, :lightmulti, :lightorange, :lighttealblue,
+        :blueorange, :brownbluegreen, :purplegreen, :pinkyellowgreen, :purpleorange, :redblue, :redgrey, :redyellowblue, :redyellowgreen,
+        :spectral, :rainbow, :sinebow
+    ))
+        throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
+    end
+    try
+        @vlplot(
+            width = 680,
+            height = 400,
+            mark = {
+                :geoshape,
+                stroke = :black
+            },
+            data = {
+                values = JSON.json(JSON.parsefile(project_path("data/counties_topo.json"))),
+                format = {
+                    type = :topojson,
+                    feature = :counties
+                }
+            },
+            transform = [{
+                lookup = "properties.FIPS",
+                from = {
+                    data = df,
+                    key = fips_col,
+                    fields = [string(data_col)]
+                }
+            }],
+            projection = {
+                type = :albersUsa
+            },
+            color = {
+                "$data_col:q",
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
+            },
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office"}, {field = "properties.WH_REGION", title = "WHD Region"}]
             }
         )
     catch err
