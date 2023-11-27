@@ -703,6 +703,8 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
         throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
     end
     try
+        df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
+        
         @vlplot(
             width = 680,
             height = 400,
