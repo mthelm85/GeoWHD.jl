@@ -65,11 +65,12 @@ export LAUS
 export get_office_names
 export QCEW
 export do_heatmap
+export do_county_heatmap
+export do_msa_heatmap
 export ro_heatmap
 export OEWS
 export get_msas
 export msa_heatmap
-export do_msa_heatmap
-export do_county_heatmap
+export county_heatmap
 
 end
