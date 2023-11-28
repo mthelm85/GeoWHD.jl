@@ -638,7 +638,7 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
 end
 
 """
-    do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+    do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
 
 Generates a heatmap plot of counties for a specific District Office using Vega-Lite.
 
@@ -646,7 +646,7 @@ Generates a heatmap plot of counties for a specific District Office using Vega-L
 - `df::DataFrame`: The input DataFrame containing the data to be visualized.
 - `office::String`: The District Office for which you would like to create the visual.
 - `fips_col::Symbol=:fips`: The column in the DataFrame that represents the 5-digit county FIPS to be plotted.
-- `data_col::Symbol=:value`: The column in the DataFrame that represents the data to be used for coloring the areas.
+- `data_col::Symbol`: The column in the DataFrame that represents the data to be used for coloring the areas.
 - `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
 
 # Example
@@ -657,7 +657,7 @@ do_county_heatmap(df; color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -812,7 +812,27 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
     end
 end
 
-function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+"""
+    ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol, color_scheme::Symbol=:greys)
+
+Generates a heatmap plot of MSAs for a specific Regional Office using Vega-Lite.
+
+# Arguments
+- `df::DataFrame`: The input DataFrame containing the data to be visualized.
+- `office::String`: The Regional Office for which you would like to create the visual.
+- `area_col::Symbol=:area_code`: The column in the DataFrame that represents the MSAs to be plotted.
+- `data_col::Symbol`: The column in the DataFrame that represents the data to be used for coloring the areas.
+- `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
+
+# Example
+```julia
+ro_msa_heatmap(df; data_col=:unemployment_rate, color_scheme=:blues)
+```
+
+# Output
+A heatmap plot where each area is colored based on the specified data column.
+"""
+function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol, color_scheme::Symbol=:greys)
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -889,7 +909,27 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
     end
 end
 
-function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+"""
+    ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
+
+Generates a heatmap plot of counties for a specific Regional Office using Vega-Lite.
+
+# Arguments
+- `df::DataFrame`: The input DataFrame containing the data to be visualized.
+- `office::String`: The Regional Office for which you would like to create the visual.
+- `fips_col::Symbol=:fips`: The column in the DataFrame that represents the 5-digit county FIPS to be plotted.
+- `data_col::Symbol`: The column in the DataFrame that represents the data to be used for coloring the areas.
+- `color_scheme::Symbol=:greys`: The color scheme to use for the heatmap. Default is `:greys`. Available options are here: https://vega.github.io/vega/docs/schemes/
+
+# Example
+```julia
+ro_county_heatmap(df; data_col=:unemployment_rate, color_scheme=:blues)
+```
+
+# Output
+A heatmap plot where each area is colored based on the specified data column.
+"""
+function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
