@@ -74,3 +74,25 @@ function get_oews_data()
     df.value = strip.(df.value)
     return df
 end
+
+function get_ces_series()
+    println("Fetching CES series information...")
+    url = "https://download.bls.gov/pub/time.series/sm/sm.series"
+    response = HTTP.get(url)
+    content = String(response.body)
+    df = @chain CSV.read(IOBuffer(content), DataFrame; normalizenames=true) begin
+        @rtransform(:area_code = string(:area_code))
+        @rtransform(:district_office = get(msas, :area_code, missing))
+        @rsubset(!ismissing(:district_office))
+    end
+    return df
+end
+
+function get_ces_data()
+    println("Fetching CES data...")
+    url = "https://download.bls.gov/pub/time.series/sm/sm.data.0.Current"
+    response = HTTP.get(url)
+    content = String(response.body)
+    df = CSV.read(IOBuffer(content), DataFrame; normalizenames=true)
+    return df
+end

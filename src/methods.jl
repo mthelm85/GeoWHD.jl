@@ -1,3 +1,52 @@
+function CES(office::DistrictOffice)
+    series = @chain ces_series[] begin
+        @rsubset(:area_code in do_msas(office))
+    end
+    return leftjoin(series, ces_data[]; on=:series_id, makeunique=true)
+end
+
+function CES(office::RegionalOffice)
+    series = @chain ces_series[] begin
+        @rsubset(:area_code in region_msas(office))
+    end
+    return leftjoin(series, ces_data[]; on=:series_id, makeunique=true)
+end
+
+"""
+    CES(office::String)
+
+Retrieve the most recent CES (Current Employment Statistics) data for a specific office.
+
+## Arguments
+- `office::String`: The name of the office for which CES data is requested. Can be a regional or district office.
+
+## Returns
+A `DataFrame` containing the requested data.
+
+## Example
+```julia
+CES("New York City District Office")
+```
+"""
+function CES(office::String)
+    try
+        office_lookup = offices[office]
+        if isnothing(ces_series[])
+            ces_series[] = get_ces_series()
+        end
+        if isnothing(ces_data[])
+            ces_data[] = get_ces_data()
+        end
+        return CES(office_lookup)
+    catch err
+        if typeof(err) == KeyError
+            nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
+            return throw(ErrorException(""""$office" is not a valid office name. Did you mean "$nearest"?"""))
+        end
+        throw(err)
+    end
+end
+
 function OEWS(office::DistrictOffice)
     series = @chain oews_series[] begin
         @rsubset(:area_code in do_msas(office))
@@ -704,7 +753,7 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
     end
     try
         df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
-        
+
         @vlplot(
             width = 680,
             height = 400,
@@ -737,6 +786,79 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office"}, {field = "properties.WH_REGION", title = "WHD Region"}]
+            }
+        )
+    catch err
+        throw(err)
+    end
+end
+
+function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+    if !in(color_scheme, (
+        :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
+        :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
+        :purpleblue, :purplered, :redpurple, :yellowgreenblue, :yellowgreen, :yelloworangebrown, :yelloworangered, :darkblue,
+        :darkgold, :darkgreen, :darkmulti, :darkred, :lightgreyred, :lightgreyteal, :lightmulti, :lightorange, :lighttealblue,
+        :blueorange, :brownbluegreen, :purplegreen, :pinkyellowgreen, :purpleorange, :redblue, :redgrey, :redyellowblue, :redyellowgreen,
+        :spectral, :rainbow, :sinebow
+    ))
+        throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
+    end
+    try
+        offices[office]
+    catch err
+        if typeof(err) == KeyError
+            nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
+            return throw(ErrorException(""""$office" is not a valid office name. Did you mean "$nearest"?"""))
+        end
+        throw(err)
+    end
+    if office_type(office) == DistrictOffice
+        throw(ErrorException("$office is a DistrictOffice. Did you mean to call do_msa_heatmap?"))
+    end
+    try
+        oes = JSON.parsefile(project_path("data/OES_WHD_topo.json"))
+        filtered_dict = Dict(
+            "arcs" => oes["arcs"],
+            "objects" => Dict("OES_WHD_geo2" => Dict(
+                "type" => "GeometryCollection",
+                "geometries" => filter(dict -> office in dict["properties"]["WH_REGION"], oes["objects"]["OES_WHD_geo2"]["geometries"])
+            )),
+            "type" => oes["type"],
+            "transform" => oes["transform"]
+        )
+        @vlplot(
+            width = 680,
+            height = 400,
+            mark = {
+                :geoshape,
+                stroke = :black
+            },
+            data = {
+                values = JSON.json(filtered_dict),
+                format = {
+                    type = :topojson,
+                    feature = :OES_WHD_geo2
+                }
+            },
+            transform = [{
+                lookup = "properties.msa7",
+                from = {
+                    data = df,
+                    key = area_col,
+                    fields = [string(data_col)]
+                }
+            }],
+            projection = {
+                type = :mercator
+            },
+            color = {
+                "$data_col:q",
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true
+            },
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.MSA", title = "MSA"}]
             }
         )
     catch err

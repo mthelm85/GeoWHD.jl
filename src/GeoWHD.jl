@@ -60,15 +60,18 @@ const laus = Ref{Union{Nothing,DataFrame}}(nothing)
 const qcew = Ref{Union{Nothing,DataFrame}}(nothing)
 const oews_series = Ref{Union{Nothing,DataFrame}}(nothing)
 const oews_data = Ref{Union{Nothing,DataFrame}}(nothing)
+const ces_series = Ref{Union{Nothing,DataFrame}}(nothing)
+const ces_data = Ref{Union{Nothing,DataFrame}}(nothing)
 
+export CES
 export LAUS
-export get_office_names
+export OEWS
 export QCEW
+export get_office_names
 export do_heatmap
 export do_county_heatmap
 export do_msa_heatmap
 export ro_heatmap
-export OEWS
 export get_msas
 export msa_heatmap
 export county_heatmap
