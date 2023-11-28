@@ -1,7 +1,7 @@
 name = "GeoWHD"
 uuid = "4281af26-9073-4b06-97a8-79c644208cbb"
 authors = ["Matt Helm <mthelm85@gmail.com> and contributors"]
-version = "1.0.19-DEV"
+version = "1.0.20-DEV"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"

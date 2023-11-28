@@ -331,11 +331,10 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
         throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
     end
     try
-        min_value = minimum(df[!, data_col])
-
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -348,7 +347,7 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.WH_OFFICE",
                 from = {
                     data = df,
@@ -361,9 +360,9 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office"}]
@@ -409,11 +408,10 @@ function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
         throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
     end
     try
-        min_value = minimum(df[!, data_col])
-
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -426,7 +424,7 @@ function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.WH_REGION",
                 from = {
                     data = df,
@@ -439,9 +437,9 @@ function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.WH_REGION", title = "WHD Region"}]
@@ -500,11 +498,10 @@ function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbo
         throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
     end
     try
-        min_value = minimum(df[!, data_col])
-
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -517,7 +514,7 @@ function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbo
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.msa7",
                 from = {
                     data = df,
@@ -530,9 +527,9 @@ function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbo
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office(s)"}, {field = "properties.MSA", title = "MSA"}]
@@ -598,11 +595,10 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
             "transform" => oes["transform"]
         )
 
-        min_value = minimum(df[!, data_col])
-
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -615,7 +611,7 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.msa7",
                 from = {
                     data = df,
@@ -628,9 +624,9 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.MSA", title = "MSA"}]
@@ -698,11 +694,11 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         )
 
         df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
-        min_value = minimum(df[!, data_col])
 
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -715,7 +711,7 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.FIPS",
                 from = {
                     data = df,
@@ -728,9 +724,9 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.COUNTYNAME", title = "County"}]
@@ -773,11 +769,11 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
     end
     try
         df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
-        min_value = minimum(df[!, data_col])
 
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -790,7 +786,7 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.FIPS",
                 from = {
                     data = df,
@@ -803,9 +799,9 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.WH_OFFICE", title = "WHD Office"}, {field = "properties.WH_REGION", title = "WHD Region"}]
@@ -851,11 +847,10 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
             "transform" => oes["transform"]
         )
 
-        min_value = minimum(df[!, data_col])
-
         @vlplot(
             width = 680,
             height = 400,
+            config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
                 stroke = :black
@@ -868,7 +863,7 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
                 }
             },
             transform = [{
-                default=min_value-1,
+                default=NaN,
                 lookup = "properties.msa7",
                 from = {
                     data = df,
@@ -881,9 +876,9 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
             },
             color = {
                 "$data_col:q",
-                scale = {domain = [min_value, maximum(df[!, data_col])], scheme = color_scheme},
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
                 legend = true,
-                condition={test="datum['$data_col'] === $(min_value-1)", value=""}
+                condition={test="datum['value'] === null", value="transparent"},
             },
             encoding = {
                 tooltip = [{field = data_col}, {field = "properties.MSA", title = "MSA"}]
