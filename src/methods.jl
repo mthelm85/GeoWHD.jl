@@ -952,7 +952,7 @@ function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
                 }
             }],
             projection = {
-                type = office == "Seattle District Office" ? :albersUsa : :mercator
+                type = (office == "Seattle District Office" || office == "Western Region") ? :albersUsa : :mercator
             },
             color = {
                 "$data_col:q",
