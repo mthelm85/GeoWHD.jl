@@ -888,3 +888,83 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
         throw(err)
     end
 end
+
+function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+    if !in(color_scheme, (
+        :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
+        :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
+        :purpleblue, :purplered, :redpurple, :yellowgreenblue, :yellowgreen, :yelloworangebrown, :yelloworangered, :darkblue,
+        :darkgold, :darkgreen, :darkmulti, :darkred, :lightgreyred, :lightgreyteal, :lightmulti, :lightorange, :lighttealblue,
+        :blueorange, :brownbluegreen, :purplegreen, :pinkyellowgreen, :purpleorange, :redblue, :redgrey, :redyellowblue, :redyellowgreen,
+        :spectral, :rainbow, :sinebow
+    ))
+        throw(ErrorException("$color_scheme is not a valid color scheme. Choose an option from https://vega.github.io/vega/docs/schemes/"))
+    end
+    try
+        offices[office]
+    catch err
+        if typeof(err) == KeyError
+            nearest = findnearest(office, collect(keys(offices)), Levenshtein())[1]
+            return throw(ErrorException(""""$office" is not a valid office name. Did you mean "$nearest"?"""))
+        end
+        throw(err)
+    end
+    if office_type(office) == DistrictOffice
+        throw(ErrorException("$office is a DistrictOffice. Did you mean to call do_county_heatmap?"))
+    end
+    try
+        laus = JSON.parsefile(project_path("data/counties_topo.json"))
+
+        filtered_dict = Dict(
+            "arcs" => laus["arcs"],
+            "objects" => Dict("counties" => Dict(
+                "type" => "GeometryCollection",
+                "geometries" => filter(dict -> office == dict["properties"]["WH_REGION"], laus["objects"]["counties"]["geometries"])
+            )),
+            "type" => laus["type"],
+            "transform" => laus["transform"]
+        )
+
+        df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
+
+        @vlplot(
+            width = 680,
+            height = 400,
+            config={mark={invalid=NaN}},
+            mark = {
+                :geoshape,
+                stroke = :black
+            },
+            data = {
+                values = JSON.json(filtered_dict),
+                format = {
+                    type = :topojson,
+                    feature = :counties
+                }
+            },
+            transform = [{
+                default=NaN,
+                lookup = "properties.FIPS",
+                from = {
+                    data = df,
+                    key = fips_col,
+                    fields = [string(data_col)]
+                }
+            }],
+            projection = {
+                type = office == "Seattle District Office" ? :albersUsa : :mercator
+            },
+            color = {
+                "$data_col:q",
+                scale = {domain = [minimum(df[!, data_col]), maximum(df[!, data_col])], scheme = color_scheme},
+                legend = true,
+                condition={test="datum['value'] === null", value="transparent"},
+            },
+            encoding = {
+                tooltip = [{field = data_col}, {field = "properties.COUNTYNAME", title = "County"}]
+            }
+        )
+    catch err
+        throw(err)
+    end
+end

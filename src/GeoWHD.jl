@@ -72,6 +72,7 @@ export do_heatmap
 export do_county_heatmap
 export do_msa_heatmap
 export ro_heatmap
+export ro_county_heatmap
 export ro_msa_heatmap
 export get_msas
 export msa_heatmap
