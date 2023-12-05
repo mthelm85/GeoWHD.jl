@@ -231,13 +231,13 @@ end
 
 function QCEW(office::DistrictOffice)
     @chain qcew[] begin
-        @rsubset(:areacode in do_counties_fips(office))
+        @rsubset(:area_fips in do_counties_fips(office))
     end
 end
 
 function QCEW(office::RegionalOffice)
     @chain qcew[] begin
-        @rsubset(:areacode in region_counties_fips(office))
+        @rsubset(:area_fips in region_counties_fips(office))
     end
 end
 

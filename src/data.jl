@@ -18,7 +18,7 @@ end
 function get_qcew_data()
     println("Fetching QCEW data...")
     year = Dates.year(now())
-    url = "https://data.bls.gov/cew/data/files/$year/xls/$(year)_all_county_high_level.zip"
+    url = "https://data.bls.gov/cew/data/files/$year/csv/$(year)_qtrly_singlefile.zip"
     res = HTTP.request("HEAD", url)
     if res.status !== 200
         year = year - 1
@@ -37,15 +37,11 @@ function get_qcew_data()
         end
 
         close(zarchive)
-        extracted_files = filter(file -> endswith(file, ".xlsx"), readdir(tempdir; join=true))
-        xf = XLSX.readxlsx(extracted_files[1])
-        us = DataFrame(XLSX.readtable(extracted_files[1], XLSX.sheetnames(xf)[1]; infer_eltypes=true))
-        pr = DataFrame(XLSX.readtable(extracted_files[1], XLSX.sheetnames(xf)[2]; infer_eltypes=true))
-        df = vcat(us, pr)
-        normalize_names!(df)
-        return @chain df begin
-            @rsubset(:area_type == "County")
-            @transform(:areacode = parse.(Int, :areacode))
+        extracted_file = filter(file -> endswith(file, ".csv"), readdir(tempdir; join=true))
+
+        return @chain CSV.read(extracted_file, DataFrame; normalizenames=true) begin
+            @rsubset(:agglvl_code in 70:78)
+            @rtransform(:area_fips = parse(Int, :area_fips))
         end
     catch err
         throw(err)

@@ -27,6 +27,7 @@ unemployment = DataFrame(
 do_heatmap(unemployment; office_col=:office, data_col=:unemployment_rate, color_scheme=:reds)
 ```
 ## Functions
+- `CES`: Retrives CES data for a given office.
 - `LAUS`: Retrieves LAUS data for a given office.
 - `OEWS`: Retrieves OEWS data for a given office.
 - `QCEW`: Retrieves QCEW data for a given office.
