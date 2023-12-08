@@ -1,13 +1,15 @@
 function CES(office::DistrictOffice)
+    msas = do_msas(office)
     series = @chain ces_series[] begin
-        @rsubset(:area_code in do_msas(office))
+        @rsubset(:area_code in msas)
     end
     return leftjoin(series, ces_data[]; on=:series_id, makeunique=true)
 end
 
 function CES(office::RegionalOffice)
+    msas = region_msas(office)
     series = @chain ces_series[] begin
-        @rsubset(:area_code in region_msas(office))
+        @rsubset(:area_code in msas)
     end
     return leftjoin(series, ces_data[]; on=:series_id, makeunique=true)
 end
@@ -48,15 +50,17 @@ function CES(office::String)
 end
 
 function OEWS(office::DistrictOffice)
+    msas = do_msas(office)
     series = @chain oews_series[] begin
-        @rsubset(:area_code in do_msas(office))
+        @rsubset(:area_code in msas)
     end
     return leftjoin(series, oews_data[]; on=:series_id, makeunique=true)
 end
 
 function OEWS(office::RegionalOffice)
+    msas = region_msas(office)
     series = @chain oews_series[] begin
-        @rsubset(:area_code in region_msas(office))
+        @rsubset(:area_code in msas)
     end
     return leftjoin(series, oews_data[]; on=:series_id, makeunique=true)
 end
@@ -126,9 +130,11 @@ function OEWS(office::String)
 end
 
 function LAUS(office::DistrictOffice; aggregate::Bool=true)
+    fips = do_counties_fips(office)
+    
     if aggregate
         return @chain laus[] begin
-            @rsubset(:fips in do_counties_fips(office))
+            @rsubset(:fips in fips)
             @by(:period,
                 :civilian_labor_force = sum(:civilian_labor_force),
                 :employed = sum(:employed),
@@ -138,16 +144,18 @@ function LAUS(office::DistrictOffice; aggregate::Bool=true)
         end
     else
         return @chain laus[] begin
-            @rsubset(:fips in do_counties_fips(office))
+            @rsubset(:fips in fips)
             @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
         end
     end
 end
 
 function LAUS(office::RegionalOffice; aggregate::Bool=true)
+    fips = region_counties_fips(office)
+
     if aggregate
         return @chain laus[] begin
-            @rsubset(:fips in region_counties_fips(office))
+            @rsubset(:fips in fips)
             @by(:period,
                 :civilian_labor_force = sum(:civilian_labor_force),
                 :employed = sum(:employed),
@@ -157,7 +165,7 @@ function LAUS(office::RegionalOffice; aggregate::Bool=true)
         end
     else
         return @chain laus[] begin
-            @rsubset(:fips in region_counties_fips(office))
+            @rsubset(:fips in fips)
             @rtransform(:unemployment_rate = (:unemployed / :civilian_labor_force) * 100)
         end
     end
@@ -230,14 +238,16 @@ function LAUS(office::String; aggregate::Bool=true)
 end
 
 function QCEW(office::DistrictOffice)
+    fips = do_counties_fips(office)
     @chain qcew[] begin
-        @rsubset(:area_fips in do_counties_fips(office))
+        @rsubset(:area_fips in fips)
     end
 end
 
 function QCEW(office::RegionalOffice)
+    fips = region_counties_fips(office)
     @chain qcew[] begin
-        @rsubset(:area_fips in region_counties_fips(office))
+        @rsubset(:area_fips in fips)
     end
 end
 
@@ -584,12 +594,12 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
         throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_msa_heatmap?"))
     end
     try
-        oes = JSON.parsefile(project_path("data/OES_WHD_topo.json"))
+        oes = JSON.parsefile(project_path("data/OES_WHD_DO.json"))
         filtered_dict = Dict(
             "arcs" => oes["arcs"],
-            "objects" => Dict("OES_WHD_geo2" => Dict(
+            "objects" => Dict("OES_WHD" => Dict(
                 "type" => "GeometryCollection",
-                "geometries" => filter(dict -> office in dict["properties"]["WH_OFFICE"], oes["objects"]["OES_WHD_geo2"]["geometries"])
+                "geometries" => filter(dict -> office in dict["properties"]["WH_OFFICE"], oes["objects"]["OES_WHD"]["geometries"])
             )),
             "type" => oes["type"],
             "transform" => oes["transform"]
@@ -607,7 +617,7 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
                 values = JSON.json(filtered_dict),
                 format = {
                     type = :topojson,
-                    feature = :OES_WHD_geo2
+                    feature = :OES_WHD
                 }
             },
             transform = [{
@@ -856,12 +866,12 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
         throw(ErrorException("$office is a DistrictOffice. Did you mean to call do_msa_heatmap?"))
     end
     try
-        oes = JSON.parsefile(project_path("data/OES_WHD_topo.json"))
+        oes = JSON.parsefile(project_path("data/OES_WHD_RO.json"))
         filtered_dict = Dict(
             "arcs" => oes["arcs"],
-            "objects" => Dict("OES_WHD_geo2" => Dict(
+            "objects" => Dict("OES_WHD" => Dict(
                 "type" => "GeometryCollection",
-                "geometries" => filter(dict -> office in dict["properties"]["WH_REGION"], oes["objects"]["OES_WHD_geo2"]["geometries"])
+                "geometries" => filter(dict -> office in dict["properties"]["WH_REGION"], oes["objects"]["OES_WHD"]["geometries"])
             )),
             "type" => oes["type"],
             "transform" => oes["transform"]
@@ -879,7 +889,7 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
                 values = JSON.json(filtered_dict),
                 format = {
                     type = :topojson,
-                    feature = :OES_WHD_geo2
+                    feature = :OES_WHD
                 }
             },
             transform = [{
@@ -892,7 +902,7 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
                 }
             }],
             projection = {
-                type = :mercator
+                type = office == "Western Region" ? :albersUsa : :mercator
             },
             color = {
                 "$data_col:q",
