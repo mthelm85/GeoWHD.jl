@@ -131,7 +131,7 @@ end
 
 function LAUS(office::DistrictOffice; aggregate::Bool=true)
     fips = do_counties_fips(office)
-    
+
     if aggregate
         return @chain laus[] begin
             @rsubset(:fips in fips)
@@ -353,7 +353,7 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
                 values = JSON.json(JSON.parsefile(project_path("data/offices_topo.json"))),
                 format = {
                     type = :topojson,
-                    feature = :offices
+                    feature = :whd_offices
                 }
             },
             transform = [{
@@ -520,7 +520,7 @@ function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbo
                 values = JSON.json(JSON.parsefile(project_path("data/OES_WHD_topo.json"))),
                 format = {
                     type = :topojson,
-                    feature = :OES_WHD_geo2
+                    feature = :OES_WHD
                 }
             },
             transform = [{
@@ -691,13 +691,13 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         throw(ErrorException("$office is a RegionalOffice. Did you mean to call ro_county_heatmap?"))
     end
     try
-        laus = JSON.parsefile(project_path("data/counties_topo.json"))
+        laus = JSON.parsefile(project_path("data/counties_DO.json"))
 
         filtered_dict = Dict(
             "arcs" => laus["arcs"],
-            "objects" => Dict("counties" => Dict(
+            "objects" => Dict("whd_counties" => Dict(
                 "type" => "GeometryCollection",
-                "geometries" => filter(dict -> office == dict["properties"]["WH_OFFICE"], laus["objects"]["counties"]["geometries"])
+                "geometries" => filter(dict -> office == dict["properties"]["WH_OFFICE"], laus["objects"]["whd_counties"]["geometries"])
             )),
             "type" => laus["type"],
             "transform" => laus["transform"]
@@ -717,7 +717,7 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
                 values = JSON.json(filtered_dict),
                 format = {
                     type = :topojson,
-                    feature = :counties
+                    feature = :whd_counties
                 }
             },
             transform = [{
@@ -730,7 +730,7 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
                 }
             }],
             projection = {
-                type = office == "Seattle District Office" ? :albersUsa : :mercator
+                type = :mercator
             },
             color = {
                 "$data_col:q",
@@ -792,7 +792,7 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
                 values = JSON.json(JSON.parsefile(project_path("data/counties_topo.json"))),
                 format = {
                     type = :topojson,
-                    feature = :counties
+                    feature = :whd_counties
                 }
             },
             transform = [{
@@ -963,13 +963,13 @@ function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         throw(ErrorException("$office is a DistrictOffice. Did you mean to call do_county_heatmap?"))
     end
     try
-        laus = JSON.parsefile(project_path("data/counties_topo.json"))
+        laus = JSON.parsefile(project_path("data/counties_RO.json"))
 
         filtered_dict = Dict(
             "arcs" => laus["arcs"],
-            "objects" => Dict("counties" => Dict(
+            "objects" => Dict("whd_counties" => Dict(
                 "type" => "GeometryCollection",
-                "geometries" => filter(dict -> office == dict["properties"]["WH_REGION"], laus["objects"]["counties"]["geometries"])
+                "geometries" => filter(dict -> office == dict["properties"]["WH_REGION"], laus["objects"]["whd_counties"]["geometries"])
             )),
             "type" => laus["type"],
             "transform" => laus["transform"]
@@ -989,7 +989,7 @@ function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
                 values = JSON.json(filtered_dict),
                 format = {
                     type = :topojson,
-                    feature = :counties
+                    feature = :whd_counties
                 }
             },
             transform = [{
