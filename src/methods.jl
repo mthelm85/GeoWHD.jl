@@ -326,7 +326,7 @@ heatmap = do_heatmap(df; office_col=:office_name, data_col=:value, color_scheme=
 ```
 This code creates a heatmap visualization using the `df` DataFrame. The `office_col` argument specifies the column in `df` that contains the office names, and the `data_col` argument specifies the column that contains the data values.
 """
-function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
+function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if office_type(df[1, office_col]) == RegionalOffice
         throw(ErrorException("The first value in the $office_col column is a RegionalOffice. Did you mean to call ro_heatmap?"))
     end
@@ -342,8 +342,8 @@ function do_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
     end
     try
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -403,7 +403,7 @@ heatmap = ro_heatmap(df; office_col=:office_name, data_col=:value, color_scheme=
 ```
 This code creates a heatmap visualization using the `df` DataFrame. The `office_col` argument specifies the column in `df` that contains the office names, and the `data_col` argument specifies the column that contains the data values.
 """
-function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys)
+function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if office_type(df[1, office_col]) == DistrictOffice
         throw(ErrorException("The first value in the $office_col column is a DistrictOffice. Did you mean to call do_heatmap?"))
     end
@@ -419,8 +419,8 @@ function ro_heatmap(df::DataFrame; office_col::Symbol, data_col::Symbol, color_s
     end
     try
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -496,7 +496,7 @@ msa_heatmap(df; color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -509,8 +509,8 @@ function msa_heatmap(df::DataFrame; area_col::Symbol=:area_code, data_col::Symbo
     end
     try
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -570,7 +570,7 @@ do_msa_heatmap(df; color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys)
+function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol=:value, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -606,8 +606,8 @@ function do_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
         )
 
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -667,7 +667,7 @@ do_county_heatmap(df; color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
+function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -706,8 +706,8 @@ function do_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
 
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -766,7 +766,7 @@ county_heatmap(df; color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
+function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400)) 
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -781,8 +781,8 @@ function county_heatmap(df::DataFrame; fips_col::Symbol=:fips, data_col::Symbol,
         df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
 
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -842,7 +842,7 @@ ro_msa_heatmap(df; data_col=:unemployment_rate, color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol, color_scheme::Symbol=:greys)
+function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_code, data_col::Symbol, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -878,8 +878,8 @@ function ro_msa_heatmap(df::DataFrame, office::String; area_col::Symbol=:area_co
         )
 
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
@@ -939,7 +939,7 @@ ro_county_heatmap(df; data_col=:unemployment_rate, color_scheme=:blues)
 # Output
 A heatmap plot where each area is colored based on the specified data column.
 """
-function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys)
+function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips, data_col::Symbol, color_scheme::Symbol=:greys, size::Tuple{Int64, Int64}=(680, 400))
     if !in(color_scheme, (
         :blues, :tealblues, :teals, :greens, :browns, :oranges, :reds, :purples, :warmgreys, :greys, :viridis, :magma, :inferno,
         :plasma, :cividis, :turbo, :bluegreen, :bluepurple, :goldgreen, :goldorange, :goldred, :greenblue, :orangered, :purplebluegreen,
@@ -978,8 +978,8 @@ function ro_county_heatmap(df::DataFrame, office::String; fips_col::Symbol=:fips
         df[!, fips_col] = lpad.(df[!, fips_col], 5, "0")
 
         @vlplot(
-            width = 680,
-            height = 400,
+            width = size[1],
+            height = size[2],
             config={mark={invalid=NaN}},
             mark = {
                 :geoshape,
