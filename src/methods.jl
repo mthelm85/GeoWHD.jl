@@ -300,10 +300,48 @@ The code snippet retrieves the names of regional and district offices and stores
 The function returns a tuple with two elements: `regional_offices` and `district_offices`. These elements contain the names of the regional and district offices, respectively.
 """
 function get_office_names()
-    office_names = keys(offices)
-    regional = sort(collect(filter(ofc -> occursin("Region", ofc), office_names)))
-    district = sort(collect(filter(ofc -> occursin("District", ofc), office_names)))
+    office_names = collect(keys(offices))
+    regional = []
+    district = []
+    for ofc in office_names
+        if occursin("Region", ofc)
+            push!(regional, ofc)
+        elseif occursin("District", ofc)
+            push!(district, ofc)
+        end
+    end
+    regional = sort(regional)
+    district = sort(district)
     return (regional_offices=regional, district_offices=district)
+end
+
+"""
+    get_office_names(region::String)
+
+Retrieve the names of the district offices belonging to a particular region.
+
+# Example
+```julia
+southeast_office_names = get_office_names("Southeast Region")
+```
+The code snippet retrieves the names of district offices in the southeast region and stores them in the `southeast_office_names` variable.
+
+# Outputs
+The function returns a vector of office names.
+"""
+function get_office_names(region::String)
+    if office_type(region) == DistrictOffice
+        throw(ErrorException("$region is a DistrictOffice. This function is for retrieving district offices belonging to a particular region."))
+    end
+    try
+        return [ofc.name for ofc in offices[region].district_offices]
+    catch err
+        if typeof(err) == KeyError
+            nearest = findnearest(region, collect(keys(offices)), Levenshtein())[1]
+            return throw(ErrorException(""""$region" is not a valid region name. Did you mean "$nearest"?"""))
+        end
+        throw(err)
+    end
 end
 
 """
