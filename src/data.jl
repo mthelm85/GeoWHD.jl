@@ -1,7 +1,16 @@
+const HEADERS = [
+    "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.9999.99 Safari/537.36",
+    "Accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language" => "en-US,en;q=0.9",
+    "Accept-Encoding" => "gzip, deflate, br",
+    "Connection" => "keep-alive",
+    "Cache-Control" => "max-age=0",
+]
+
 function get_laus_data()
     println("Fetching LAUS data...")
     url = "https://www.bls.gov/web/metro/laucntycur14.txt"
-    response = HTTP.get(url)
+    response = HTTP.get(url, HEADERS)
     content = String(response.body)
     # Skip to the 7th line
     lines = split(content, '\n')[7:end-6]
@@ -19,6 +28,7 @@ function get_qcew_data()
     println("Fetching QCEW data...")
     year = Dates.year(now())
     url = "https://data.bls.gov/cew/data/files/$year/csv/$(year)_qtrly_singlefile.zip"
+    
     try
         HTTP.request("HEAD", url)
     catch e
@@ -58,7 +68,7 @@ end
 function get_oews_series()
     println("Fetching OEWS series information...")
     url = "https://download.bls.gov/pub/time.series/oe/oe.series"
-    response = HTTP.get(url)
+    response = HTTP.get(url, HEADERS; cookies=true)
     content = String(response.body)
     df = @chain CSV.read(IOBuffer(content), DataFrame; normalizenames=true) begin
         @rsubset(:areatype_code == "M")
@@ -71,7 +81,7 @@ end
 function get_oews_data()
     println("Fetching OEWS data...")
     url = "https://download.bls.gov/pub/time.series/oe/oe.data.0.Current"
-    response = HTTP.get(url)
+    response = HTTP.get(url, HEADERS; cookies=true)
     content = String(response.body)
     df = CSV.read(IOBuffer(content), DataFrame; normalizenames=true)
     df.value = strip.(df.value)
@@ -81,7 +91,7 @@ end
 function get_ces_series()
     println("Fetching CES series information...")
     url = "https://download.bls.gov/pub/time.series/sm/sm.series"
-    response = HTTP.get(url)
+    response = HTTP.get(url, HEADERS; cookies=true)
     content = String(response.body)
     df = @chain CSV.read(IOBuffer(content), DataFrame; normalizenames=true) begin
         @rtransform(:area_code = string(:area_code))
@@ -94,7 +104,7 @@ end
 function get_ces_data()
     println("Fetching CES data...")
     url = "https://download.bls.gov/pub/time.series/sm/sm.data.0.Current"
-    response = HTTP.get(url)
+    response = HTTP.get(url, HEADERS; cookies=true)
     content = String(response.body)
     df = CSV.read(IOBuffer(content), DataFrame; normalizenames=true)
     return df
