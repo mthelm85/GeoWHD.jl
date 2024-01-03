@@ -19,11 +19,17 @@ function get_qcew_data()
     println("Fetching QCEW data...")
     year = Dates.year(now())
     url = "https://data.bls.gov/cew/data/files/$year/csv/$(year)_qtrly_singlefile.zip"
-    res = HTTP.request("HEAD", url)
-    if res.status == 404
-        year = year - 1
-        url = "https://data.bls.gov/cew/data/files/$year/csv/$(year)_qtrly_singlefile.zip"
+    try
+        HTTP.request("HEAD", url)
+    catch e
+        if isa(e, HTTP.Exception) && e.status == 404
+            year = year - 1
+            url = "https://data.bls.gov/cew/data/files/$year/csv/$(year)_qtrly_singlefile.zip"
+        else
+            throw(e)
+        end
     end
+    
     tempdir = tempname(; cleanup=true)
     filepath = joinpath(tempdir, basename(url))
     mkdir(tempdir)
