@@ -44,7 +44,7 @@ function get_qcew_data()
     filepath = joinpath(tempdir, basename(url))
     mkdir(tempdir)
     try
-        filepath = Downloads.download(url, filepath)
+        filepath = Downloads.download(url, filepath; progress=download_progress)
         println("Extracting QCEW data...")
         zarchive = ZipFile.Reader(filepath)
 

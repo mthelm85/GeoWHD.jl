@@ -5,6 +5,16 @@ function normalize_names!(df::DataFrame)
     end
 end
 
+function download_progress(total, now)
+    if total == 0
+        print("\rDownloaded $(round(now / 1024^2)) megabytes")
+        flush(stdout)
+    else
+        print("\rDownloaded $(round(now / 1024^2)) megabytes of $(round(total / 1024^2))")
+        flush(stdout)
+    end
+end
+
 office_type(office::String) = typeof(offices[office])
 do_msas(office::DistrictOffice) = [msa.id for msa in office.msas]
 do_counties_fips(office::DistrictOffice) = [county.id for county in office.counties]
